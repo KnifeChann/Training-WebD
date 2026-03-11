@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Weather Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        min-height: 100vh;
+        padding: 20px;
+        color: #fff;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-container {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      button {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        min-width: 200px;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .city-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #a0c4ff;
+      }
+
+      .weather-emoji {
+        font-size: 3.5rem;
+        margin: 10px 0;
+      }
+
+      .temperature {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #ffd93d;
+        margin: 10px 0;
+      }
+
+      .condition {
+        font-size: 1.1rem;
+        color: #b8c5d6;
+        margin-top: 10px;
+      }
+
+      /* Loading Spinner */
+      .spinner-container {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin: 20px 0;
+        font-size: 1.2rem;
+      }
+
+      .spinner-container.active {
+        display: flex;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Error State */
+      .error {
+        color: #ff6b6b;
+        font-size: 1.1rem;
+        text-align: center;
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255, 107, 107, 0.1);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+      }
+
+      .card.error-card {
+        background: rgba(255, 107, 107, 0.15);
+        border-color: rgba(255, 107, 107, 0.3);
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>🌤️ Weather Dashboard</h1>
+
+    <div class="btn-container">
+      <button id="btn">Get Weather</button>
+    </div>
+
+    <div class="spinner-container" id="loading">
+      <div class="spinner"></div>
+      <span>Loading weather data...</span>
+    </div>
+
+    <div class="container">
+      <div class="card" id="delhi">
+        <div class="city-name">Delhi</div>
+        <div class="weather-emoji">🌡️</div>
+        <div class="temperature">--°C</div>
+        <div class="condition">Click button to load</div>
+      </div>
+      <div class="card" id="mumbai">
+        <div class="city-name">Mumbai</div>
+        <div class="weather-emoji">🌡️</div>
+        <div class="temperature">--°C</div>
+        <div class="condition">Click button to load</div>
+      </div>
+      <div class="card" id="bangalore">
+        <div class="city-name">Bangalore</div>
+        <div class="weather-emoji">🌡️</div>
+        <div class="temperature">--°C</div>
+        <div class="condition">Click button to load</div>
+      </div>
+    </div>
+
+    <div id="error-message" class="error" style="display: none;"></div>
+  </body>
+  <script>
+    const btn = document.getElementById("btn");
+    const loading = document.getElementById("loading");
+    const errorMessage = document.getElementById("error-message");
+
+    // Weather code to condition and emoji mapping (WMO Weather codes)
+    function getWeatherInfo(weatherCode) {
+      const weatherMap = {
+        0: { condition: "Clear sky", emoji: "☀️" },
+        1: { condition: "Mainly clear", emoji: "🌤️" },
+        2: { condition: "Partly cloudy", emoji: "⛅" },
+        3: { condition: "Overcast", emoji: "☁️" },
+        45: { condition: "Foggy", emoji: "🌫️" },
+        48: { condition: "Depositing rime fog", emoji: "🌫️" },
+        51: { condition: "Light drizzle", emoji: "🌦️" },
+        53: { condition: "Moderate drizzle", emoji: "🌧️" },
+        55: { condition: "Dense drizzle", emoji: "🌧️" },
+        61: { condition: "Slight rain", emoji: "🌧️" },
+        63: { condition: "Moderate rain", emoji: "🌧️" },
+        65: { condition: "Heavy rain", emoji: "🌧️" },
+        71: { condition: "Slight snow", emoji: "🌨️" },
+        73: { condition: "Moderate snow", emoji: "❄️" },
+        75: { condition: "Heavy snow", emoji: "❄️" },
+        77: { condition: "Snow grains", emoji: "🌨️" },
+        80: { condition: "Slight rain showers", emoji: "🌦️" },
+        81: { condition: "Moderate rain showers", emoji: "🌦️" },
+        82: { condition: "Violent rain showers", emoji: "⛈️" },
+        85: { condition: "Slight snow showers", emoji: "🌨️" },
+        86: { condition: "Heavy snow showers", emoji: "🌨️" },
+        95: { condition: "Thunderstorm", emoji: "⛈️" },
+        96: { condition: "Thunderstorm with hail", emoji: "⛈️" },
+        99: { condition: "Thunderstorm with heavy hail", emoji: "⛈️" }
+      };
+
+      return weatherMap[weatherCode] || { condition: "Unknown", emoji: "❓" };
+    }
+
+    function showLoading() {
+      loading.classList.add("active");
+      btn.disabled = true;
+      errorMessage.style.display = "none";
+    }
+
+    function hideLoading() {
+      loading.classList.remove("active");
+      btn.disabled = false;
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = "block";
+    }
+
+    function updateCard(cityId, data) {
+      const weatherCode = data.current_weather.weathercode;
+      const weatherInfo = getWeatherInfo(weatherCode);
+      const card = document.getElementById(cityId);
+
+      card.innerHTML = `
+        <div class="city-name">${card.querySelector(".city-name").textContent}</div>
+        <div class="weather-emoji">${weatherInfo.emoji}</div>
+        <div class="temperature">${data.current_weather.temperature}°C</div>
+        <div class="condition">${weatherInfo.condition}</div>
+      `;
+    }
+
+    function resetCards() {
+      const cities = ["delhi", "mumbai", "bangalore"];
+      cities.forEach(city => {
+        const card = document.getElementById(city);
+        card.innerHTML = `
+          <div class="city-name">${city.charAt(0).toUpperCase() + city.slice(1)}</div>
+          <div class="weather-emoji">🌡️</div>
+          <div class="temperature">--°C</div>
+          <div class="condition">Loading...</div>
+        `;
+      });
+    }
+
+    btn.addEventListener("click", getWeather);
+
+    function getWeather() {
+      showLoading();
+      resetCards();
+      errorMessage.style.display = "none";
+
+      const delhi = fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=28.61&longitude=77.23&current_weather=true",
+      );
+      const mumbai = fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=19.07&longitude=72.87&current_weather=true",
+      );
+      const bangalore = fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=12.97&longitude=77.59&current_weather=true",
+      );
+
+      Promise.all([delhi, mumbai, bangalore])
+        .then((responses) => {
+          // Check if any response is not OK
+          const failedResponses = responses.filter(res => !res.ok);
+          if (failedResponses.length > 0) {
+            throw new Error("Some weather data could not be fetched. Please try again.");
+          }
+          return Promise.all(responses.map((res) => res.json()));
+        })
+        .then((data) => {
+          const [delhiData, mumbaiData, bangaloreData] = data;
+
+          updateCard("delhi", delhiData);
+          updateCard("mumbai", mumbaiData);
+          updateCard("bangalore", bangaloreData);
+
+          hideLoading();
+        })
+        .catch((err) => {
+          hideLoading();
+          console.log("Error:", err);
+          showError("⚠️ Error loading weather data: " + err.message);
+        });
+    }
+  </script>
+</html>
