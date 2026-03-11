@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Weather Dashboard</title>
+
+    
+  </head>
+
+  <body>
+    <h1>Weather Dashboard</h1>
+
+    <button id="btn">Get Weather</button>
+
+    <div class="container">
+      <div class="card" id="delhi">Delhi</div>
+      <div class="card" id="mumbai">Mumbai</div>
+      <div class="card" id="bangalore">Bangalore</div> 
+    </div>
+  </body>
+  <script>
+    const btn = document.getElementById("btn");
+
+    btn.addEventListener("click", getWeather);
+
+    function getWeather() {
+      const delhi = fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=28.61&longitude=77.23&current_weather=true",
+      );
+      const mumbai = fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=19.07&longitude=72.87&current_weather=true",
+      );
+      const bangalore = fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=12.97&longitude=77.59&current_weather=true",
+      );
+
+      Promise.all([delhi, mumbai, bangalore]) 
+        .then((responses) => {
+          return Promise.all(responses.map((res) => res.json()));
+        })
+        .then((data) => {
+          const [delhiData, mumbaiData, bangaloreData] = data;
+
+          document.getElementById("delhi").innerHTML =
+            `Delhi <br> 🌡 ${delhiData.current_weather.temperature}°C`;
+
+          document.getElementById("mumbai").innerHTML =
+            `Mumbai <br> 🌡 ${mumbaiData.current_weather.temperature}°C`;
+
+          document.getElementById("bangalore").innerHTML =
+            `Bangalore <br> 🌡 ${bangaloreData.current_weather.temperature}°C`;
+        })
+        .catch((err) => {
+          console.log("Error:", err);
+        });
+    }
+  </script>
+</html>
