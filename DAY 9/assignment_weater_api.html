@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📰 Elegant News Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2a1a4e 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        padding: 20px;
+        color: #fff;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      h1 {
+        font-size: 2.8rem;
+        margin-bottom: 10px;
+        background: linear-gradient(45deg, #ffd93d, #ff6b6b, #4ecdc4);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 30px;
+        backdrop-filter: blur(5px);
+        padding: 15px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.05);
+      }
+
+      select, input, button {
+        padding: 12px 20px;
+        font-size: 1rem;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      select {
+        background: rgba(15,15,40,0.8) !important;
+        color: #ffffff !important;
+        border: 2px solid rgba(102,126,234,0.4) !important;
+        padding: 12px 20px;
+        border-radius: 15px;
+      }
+
+      select option {
+        background: #1a1a3e;
+        color: #a0d4ff;
+        padding: 10px 15px;
+        border: 1px solid rgba(102,126,234,0.3);
+        margin-bottom: 5px;
+        border-radius: 8px;
+      }
+
+      select option:hover {
+        background: #2a2a5e;
+        color: #ffffff;
+      }
+
+      select option:checked {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+      }
+
+      select:focus, input:focus {
+        outline: none;
+        background: rgba(15,15,40,0.9) !important;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.4);
+        border-color: rgba(102,126,234,0.7) !important;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(102,126,234,0.2);
+      }
+
+      button:hover:not(:disabled), button.active {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+      }
+
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .category-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        backdrop-filter: blur(5px);
+        border-radius: 20px;
+        background: rgba(255,255,255,0.05);
+      }
+
+      .tab-btn {
+        padding: 10px 18px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 20px;
+        color: #b8c5d6;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+      }
+
+      .tab-btn:hover {
+        background: rgba(255,255,255,0.15);
+        border-color: rgba(102,126,234,0.4);
+      }
+
+      .tab-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: rgba(102,126,234,0.6);
+        box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+      }
+
+      .spinner-container {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin: 40px 0;
+        font-size: 1.2rem;
+      }
+
+      .spinner-container.active {
+        display: flex;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255,255,255,0.2);
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .highlights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        animation: fadeIn 0.4s ease 0.1s backwards;
+      }
+
+      .highlights-grid > .news-card {
+        animation: slideUp 0.4s ease backwards;
+      }
+
+      .highlights-grid > .news-card:nth-child(1) { animation-delay: 0.1s; }
+      .highlights-grid > .news-card:nth-child(2) { animation-delay: 0.15s; }
+      .highlights-grid > .news-card:nth-child(3) { animation-delay: 0.2s; }
+      .highlights-grid > .news-card:nth-child(n+4) { animation-delay: 0.25s; }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .news-card {
+        background: rgba(15,15,40,0.6);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 25px;
+        text-align: left;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.12);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        will-change: transform, box-shadow, background-color;
+      }
+
+      .news-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #ffd93d, #ff6b6b);
+        box-shadow: 0 0 20px rgba(255,107,107,0.5);
+      }
+
+      .news-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        background: rgba(20,20,50,0.8);
+        box-shadow: 0 20px 40px rgba(102,126,234,0.4);
+        border-color: rgba(102,126,234,0.5);
+      }
+
+      .news-card:active {
+        transform: translateY(-4px) scale(1.01);
+      }
+
+      .news-card:focus {
+        outline: 2px solid rgba(102,126,234,0.5);
+        outline-offset: 2px;
+      }
+
+      .news-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #ffffff;
+        line-height: 1.4;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        letter-spacing: 0.3px;
+      }
+
+      .news-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95rem;
+        color: #e8eef5;
+        margin-bottom: 15px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        font-weight: 500;
+      }
+
+      .points-emoji {
+        font-size: 1.2rem;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal.active {
+        display: flex;
+        opacity: 1;
+      }
+
+      .modal-content {
+        background: rgba(20,20,40,0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 30px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        border: 1px solid rgba(255,255,255,0.15);
+        position: relative;
+      }
+
+      .modal-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .modal-content::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+      }
+
+      .modal-content::-webkit-scrollbar-thumb {
+        background: rgba(102,126,234,0.5);
+        border-radius: 10px;
+      }
+
+      .modal-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(102,126,234,0.7);
+      }
+
+      .close-modal {
+        position: absolute;
+        top: 20px;
+        right: 25px;
+        font-size: 2rem;
+        cursor: pointer;
+        color: #fff;
+        transition: all 0.2s ease;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+      }
+
+      .close-modal:hover {
+        background: rgba(255,107,107,0.3);
+        transform: rotate(90deg);
+      }
+
+      .insight-title {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        color: #ffd93d;
+        line-height: 1.4;
+      }
+
+      .insight-content {
+        line-height: 1.7;
+        color: #d0d8e0;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+      }
+
+      .insight-link {
+        display: inline-block;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(78,205,196,0.3);
+        border: 1px solid rgba(78,205,196,0.5);
+      }
+
+      .insight-link:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(78,205,196,0.5);
+        border-color: rgba(78,205,196,0.8);
+      }
+
+      .insight-link:active {
+        transform: translateY(-1px);
+      }
+
+      .error {
+        color: #ff6b6b;
+        text-align: center;
+        padding: 20px;
+        background: rgba(255,107,107,0.1);
+        border-radius: 15px;
+        border: 1.5px solid rgba(255,107,107,0.4);
+        margin: 20px auto;
+        max-width: 600px;
+        animation: slideDown 0.3s ease;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .news-card.loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+      }
+
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+
+      .news-card {
+        will-change: transform, box-shadow;
+      }
+
+      .tab-btn.active {
+        will-change: transform;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Dark Mode (Default) */
+      body.dark-mode {
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2a1a4e 100%);
+        color: #fff;
+      }
+
+      /* Light Mode */
+      body.light-mode {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 50%, #dfe5f0 100%);
+        color: #1a1a1a;
+      }
+
+      body.light-mode .news-card {
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(200, 200, 200, 0.3);
+      }
+
+      body.light-mode .news-card::before {
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+      }
+
+      body.light-mode .news-title {
+        color: #1a1a3e;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+      }
+
+      body.light-mode .news-meta {
+        color: #555;
+        text-shadow: none;
+      }
+
+      body.light-mode .controls {
+        background: rgba(200, 200, 200, 0.1);
+      }
+
+      body.light-mode select, body.light-mode input, body.light-mode button {
+        background: rgba(255, 255, 255, 0.7);
+        color: #1a1a1a;
+        border: 1px solid rgba(102, 126, 234, 0.4);
+      }
+
+      body.light-mode select {
+        background: rgba(255, 255, 255, 0.9) !important;
+        color: #1a1a1a !important;
+        border: 2px solid rgba(102, 126, 234, 0.5) !important;
+      }
+
+      body.light-mode select option {
+        background: #ffffff;
+        color: #1a1a1a;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+      }
+
+      body.light-mode select option:hover {
+        background: #f0f5ff;
+        color: #333;
+      }
+
+      body.light-mode select option:checked {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+      }
+
+      body.light-mode .category-tabs {
+        background: rgba(200, 200, 200, 0.1);
+      }
+
+      body.light-mode .tab-btn {
+        background: rgba(255, 255, 255, 0.6);
+        color: #333;
+        border: 1px solid rgba(200, 200, 200, 0.4);
+      }
+
+      body.light-mode .tab-btn:hover {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      body.light-mode .tab-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: rgba(102, 126, 234, 0.7);
+      }
+
+      body.light-mode .header {
+        color: #1a1a1a;
+      }
+
+      body.light-mode .error {
+        background: rgba(255, 107, 107, 0.15);
+        color: #c00;
+        border-color: rgba(255, 107, 107, 0.4);
+      }
+
+      body.light-mode .modal-content {
+        background: rgba(245, 247, 250, 0.95);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        color: #1a1a1a;
+      }
+
+      body.light-mode .insight-title {
+        color: #667eea;
+      }
+
+      body.light-mode .insight-link {
+        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+      }
+
+      @media (max-width: 768px) {
+        .highlights-grid {
+          grid-template-columns: 1fr;
+        }
+        h1 { font-size: 2rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>📰 News Dashboard</h1>
+      <p id="location">India News (Change location)</p>
+    </div>
+
+    <div class="controls">
+      <select id="country-select">
+        <option value="in">India 🇮🇳</option>
+        <option value="us">USA 🇺🇸</option>
+        <option value="gb">UK 🇬🇧</option>
+        <option value="au">Australia 🇦🇺</option>
+        <option value="ca">Canada 🇨🇦</option>
+        <option value="de">Germany 🇩🇪</option>
+        <option value="fr">France 🇫🇷</option>
+        <option value="jp">Japan 🇯🇵</option>
+        <option value="br">Brazil 🇧🇷</option>
+        <option value="mx">Mexico 🇲🇽</option>
+        <option value="it">Italy 🇮🇹</option>
+        <option value="es">Spain 🇪🇸</option>
+        <option value="ru">Russia 🇷🇺</option>
+        <option value="cn">China 🇨🇳</option>
+        <option value="kr">South Korea 🇰🇷</option>
+        <option value="ng">Nigeria 🇳🇬</option>
+        <option value="za">South Africa 🇿🇦</option>
+        <option value="ae">UAE 🇦🇪</option>
+        <option value="sg">Singapore 🇸🇬</option>
+        <option value="id">Indonesia 🇮🇩</option>
+        <option value="th">Thailand 🇹🇭</option>
+        <option value="ph">Philippines 🇵🇭</option>
+        <option value="my">Malaysia 🇲🇾</option>
+        <option value="pk">Pakistan 🇵🇰</option>
+        <option value="nl">Netherlands 🇳🇱</option>
+        <option value="se">Sweden 🇸🇪</option>
+        <option value="ch">Switzerland 🇨🇭</option>
+        <option value="at">Austria 🇦🇹</option>
+        <option value="be">Belgium 🇧🇪</option>
+        <option value="no">Norway 🇳🇴</option>
+        <option value="dk">Denmark 🇩🇰</option>
+        <option value="nz">New Zealand 🇳🇿</option>
+        <option value="ie">Ireland 🇮🇪</option>
+        <option value="il">Israel 🇮🇱</option>
+        <option value="sa">Saudi Arabia 🇸🇦</option>
+        <option value="eg">Egypt 🇪🇬</option>
+      </select>
+      <input type="text" id="search-input" placeholder="🔍 Search headlines..." />
+      <button id="refresh-btn">🔄 Refresh News</button>
+      <button id="theme-toggle" title="Toggle dark/light mode">🌙 Dark</button>
+    </div>
+
+    <div class="category-tabs" id="category-tabs">
+      <button class="tab-btn active" data-category="general">General</button>
+      <button class="tab-btn" data-category="business">Business</button>
+      <button class="tab-btn" data-category="technology">Technology</button>
+      <button class="tab-btn" data-category="entertainment">Entertainment</button>
+      <button class="tab-btn" data-category="sports">Sports</button>
+      <button class="tab-btn" data-category="science">Science</button>
+      <button class="tab-btn" data-category="ai">AI</button>
+    </div>
+
+    <div class="spinner-container" id="loading">
+      <div class="spinner"></div>
+      <span>Loading news highlights...</span>
+    </div>
+
+    <div class="highlights-grid" id="news-grid"></div>
+
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <!-- Insights Modal -->
+    <div class="modal" id="news-modal">
+      <div class="modal-content">
+        <span class="close-modal" id="close-modal">&times;</span>
+        <div class="insight-title" id="modal-title"></div>
+        <div class="insight-content" id="modal-content"></div>
+        <a href="#" class="insight-link" id="modal-link" target="_blank">Read Full Article</a>
+      </div>
+    </div>
+
+    <script>
+      // ========== OPTIMIZED NEWS DASHBOARD ==========
+      // DOM Elements
+      const refreshBtn = document.getElementById('refresh-btn');
+      const countrySelect = document.getElementById('country-select');
+      const searchInput = document.getElementById('search-input');
+      const categoryTabs = document.querySelectorAll('.tab-btn');
+      const loading = document.getElementById('loading');
+      const errorMessage = document.getElementById('error-message');
+      const newsGrid = document.getElementById('news-grid');
+      const newsModal = document.getElementById('news-modal');
+      const closeModal = document.getElementById('close-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalContent = document.getElementById('modal-content');
+      const modalLink = document.getElementById('modal-link');
+      const locationP = document.getElementById('location');
+      const themeToggle = document.getElementById('theme-toggle');
+
+      // State Management
+      let currentCountry = 'in';
+      let currentCategory = 'general';
+      let currentQuery = '';
+      let isLoading = false;
+      let pendingRequest = null;
+      const API_KEY = 'pub_a055ac62f3b14f508b7bea3a1068aaa0';
+
+      // Cache with 5 min expiration
+      const cache = new Map();
+      const CACHE_DURATION = 5 * 60 * 1000;
+
+      // Debounce utility for search
+      function debounce(func, delay) {
+        let timeoutId;
+        return function(...args) {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+      }
+
+      // Category mapping for NewsData.io
+      const categoryQueries = {
+        general: 'top',
+        business: 'business',
+        technology: 'technology',
+        entertainment: 'entertainment',
+        sports: 'sports',
+        science: 'science',
+        ai: 'artificial intelligence'
+      };
+
+      // Utility: Get emoji based on popularity
+      function getPointsEmoji(points) {
+        if (points >= 300) return '🔥';
+        if (points >= 100) return '⭐';
+        if (points >= 50) return '👍';
+        return '📖';
+      }
+
+      // Utility: Format relative time
+      function getRelativeTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const secondsAgo = Math.floor((now - date) / 1000);
+
+        if (secondsAgo < 60) return 'now';
+        if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
+        if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
+        return `${Math.floor(secondsAgo / 86400)}d ago`;
+      }
+
+      // UI: Show loading state
+      function showLoading() {
+        isLoading = true;
+        loading.classList.add('active');
+        refreshBtn.disabled = true;
+        errorMessage.style.display = 'none';
+      }
+
+      // UI: Hide loading state
+      function hideLoading() {
+        isLoading = false;
+        loading.classList.remove('active');
+        refreshBtn.disabled = false;
+      }
+
+      // UI: Show error message
+      function showError(msg) {
+        errorMessage.textContent = `⚠️ ${msg}`;
+        errorMessage.style.display = 'block';
+        hideLoading();
+      }
+
+      // API: Fetch with caching
+      async function fetchNews(query, hitsPerPage = 9) {
+        const cacheKey = `${currentCountry}_${query}_${hitsPerPage}`;
+        
+        // Check cache
+        if (cache.has(cacheKey)) {
+          const { data, timestamp } = cache.get(cacheKey);
+          if (Date.now() - timestamp < CACHE_DURATION) {
+            return data;
+          }
+          cache.delete(cacheKey);
+        }
+
+        try {
+          // Use NewsData.io API
+          const baseUrl = 'https://newsdata.io/api/1/news';
+          const params = new URLSearchParams({
+            apikey: API_KEY,
+            country: currentCountry,
+            language: 'en',
+            size: hitsPerPage
+          });
+
+          // Add query or category
+          if (query && query !== 'top') {
+            params.append('q', query);
+          } else if (query === 'top') {
+            params.append('category', 'top');
+          }
+
+          const url = `${baseUrl}?${params.toString()}`;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error('Failed to fetch news');
+          
+          const data = await response.json();
+          
+          if (data.status !== 'success') {
+            throw new Error(data.message || 'API error');
+          }
+
+          const articles = (data.results || []).map(article => ({
+            objectID: article.link,
+            title: article.title,
+            points: article.source_priority || 0,
+            author: article.source_name || 'Unknown',
+            num_comments: 0,
+            url: article.link,
+            content: article.description || article.content,
+            created_at: article.pubDate,
+            _tags: [article.category?.[0] || 'news']
+          }));
+          
+          // Cache the result
+          cache.set(cacheKey, { data: articles, timestamp: Date.now() });
+          return articles;
+        } catch (err) {
+          console.error('Fetch error:', err);
+          throw new Error('Failed to fetch news. Check your connection.');
+        }
+      }
+
+      // UI: Render news cards
+      function renderNews(stories) {
+        if (!stories || stories.length === 0) {
+          newsGrid.innerHTML = '<div style="text-align: center; color: #b8c5d6; padding: 40px; grid-column: 1/-1;"><p>📭 No stories found. Try searching differently!</p></div>';
+          return;
+        }
+
+        newsGrid.innerHTML = stories.map((story, index) => `
+          <div class="news-card" data-story-index="${index}" role="button" tabindex="0">
+            <div class="news-title">${escapeHtml(story.title || 'Untitled')}</div>
+            <div class="news-meta">
+              <span title="${new Date(story.created_at).toLocaleString()}">${getRelativeTime(story.created_at)}</span>
+              <span class="points-emoji">${getPointsEmoji(story.points || 0)}</span>
+            </div>
+            <div style="color: #b8c5d6; font-size: 0.9rem;">${escapeHtml(story._tags?.[0] || 'news')}</div>
+          </div>
+        `).join('');
+
+        // Store stories for modal access
+        newsGrid._stories = stories;
+
+        // Add efficient event listeners with delegation
+        newsGrid.addEventListener('click', handleCardClick);
+        newsGrid.addEventListener('keypress', handleCardKeypress);
+      }
+
+      // Event handler for card clicks
+      function handleCardClick(e) {
+        const card = e.target.closest('.news-card');
+        if (card) {
+          const index = card.dataset.storyIndex;
+          if (newsGrid._stories && newsGrid._stories[index]) {
+            openModal(newsGrid._stories[index]);
+          }
+        }
+      }
+
+      // Event handler for card keyboard navigation
+      function handleCardKeypress(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleCardClick(e);
+        }
+      }
+
+      // UI: Open modal with story details
+      function openModal(story) {
+        const readTime = Math.max(1, Math.ceil((story.title?.length || 0 + (story.content?.length || 0)) / 200));
+        
+        modalTitle.textContent = story.title || 'No title';
+        modalContent.innerHTML = `
+          <p><strong>👤 Author:</strong> ${escapeHtml(story.author || 'Unknown')}</p>
+          <p><strong>⭐ Points:</strong> ${story.points || 0} | <strong>💬 Comments:</strong> ${story.num_comments || 0}</p>
+          <p style="color: #a0c4ff; font-size: 0.9rem;">⏱️ ~${readTime} min read</p>
+          ${story.content ? `<p>${escapeHtml(story.content.substring(0, 300))}...</p>` : '<p style="color: #999;">No preview available</p>'}
+        `;
+        modalLink.href = story.url || '#';
+        modalLink.textContent = story.url ? '→ Read Full Story' : 'No link available';
+        modalLink.onclick = story.url ? null : (e) => e.preventDefault();
+        newsModal.classList.add('active');
+      }
+
+      // Utility: Escape HTML to prevent XSS
+      function escapeHtml(text) {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return (text || '').replace(/[&<>"']/g, m => map[m]);
+      }
+
+      // UI: Update location display
+      function updateLocation() {
+        const countryNames = { 
+          'in': 'India 🇮🇳', 'us': 'USA 🇺🇸', 'gb': 'UK 🇬🇧', 'au': 'Australia 🇦🇺',
+          'ca': 'Canada 🇨🇦', 'de': 'Germany 🇩🇪', 'fr': 'France 🇫🇷', 'jp': 'Japan 🇯🇵',
+          'br': 'Brazil 🇧🇷', 'mx': 'Mexico 🇲🇽', 'it': 'Italy 🇮🇹', 'es': 'Spain 🇪🇸',
+          'ru': 'Russia 🇷🇺', 'cn': 'China 🇨🇳', 'kr': 'South Korea 🇰🇷', 'ng': 'Nigeria 🇳🇬',
+          'za': 'South Africa 🇿🇦', 'ae': 'UAE 🇦🇪', 'sg': 'Singapore 🇸🇬', 'id': 'Indonesia 🇮🇩',
+          'th': 'Thailand 🇹🇭', 'ph': 'Philippines 🇵🇭', 'my': 'Malaysia 🇲🇾', 'pk': 'Pakistan 🇵🇰',
+          'nl': 'Netherlands 🇳🇱', 'se': 'Sweden 🇸🇪', 'ch': 'Switzerland 🇨🇭', 'at': 'Austria 🇦🇹',
+          'be': 'Belgium 🇧🇪', 'no': 'Norway 🇳🇴', 'dk': 'Denmark 🇩🇰', 'nz': 'New Zealand 🇳🇿',
+          'ie': 'Ireland 🇮🇪', 'il': 'Israel 🇮🇱', 'sa': 'Saudi Arabia 🇸🇦', 'eg': 'Egypt 🇪🇬'
+        };
+        locationP.textContent = `${countryNames[currentCountry] || 'Global'} News`;
+      }
+
+      // Core: Load news with optimization
+      async function loadNews() {
+        if (isLoading) return; // Prevent duplicate requests
+        
+        const query = currentQuery || categoryQueries[currentCategory];
+        showLoading();
+
+        try {
+          // Cancel pending request
+          if (pendingRequest) {
+            pendingRequest.abort();
+          }
+
+          // Fetch based on category
+          let stories = [];
+          
+          if (currentCategory === 'top' || currentCategory === 'general') {
+            stories = await fetchNews('top', 9);
+          } else if (currentQuery) {
+            stories = await fetchNews(currentQuery, 9);
+          } else {
+            stories = await fetchNews(categoryQueries[currentCategory], 9);
+          }
+
+          renderNews(stories);
+          updateLocation();
+        } catch (err) {
+          showError(err.message);
+        } finally {
+          hideLoading();
+        }
+      }
+
+      // Event: Refresh button
+      refreshBtn.addEventListener('click', () => {
+        cache.clear();
+        loadNews();
+      });
+
+      // Event: Country selection
+      countrySelect.addEventListener('change', (e) => {
+        currentCountry = e.target.value;
+        cache.clear(); // Clear cache when changing country
+        loadNews();
+      });
+
+      // Event: Debounced search
+      const debouncedSearch = debounce((value) => {
+        if (value.trim()) {
+          currentQuery = value.trim();
+          currentCategory = 'search';
+          loadNews();
+        }
+      }, 500);
+
+      searchInput.addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+      });
+
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          currentQuery = e.target.value.trim();
+          currentCategory = 'search';
+          loadNews();
+        }
+      });
+
+      // Event: Category tabs
+      categoryTabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          categoryTabs.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentCategory = btn.dataset.category || btn.dataset.category;
+          currentQuery = '';
+          searchInput.value = '';
+          loadNews();
+        });
+      });
+
+      // Event: Modal close
+      closeModal.addEventListener('click', () => newsModal.classList.remove('active'));
+      newsModal.addEventListener('click', (e) => {
+        if (e.target === newsModal) newsModal.classList.remove('active');
+      });
+
+      // Keyboard: Escape to close modal
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && newsModal.classList.contains('active')) {
+          newsModal.classList.remove('active');
+        }
+      });
+
+      // Theme Management
+      function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+        document.body.classList.add(savedTheme);
+        updateThemeButton();
+      }
+
+      function updateThemeButton() {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        themeToggle.textContent = isDarkMode ? '🌙 Dark' : '☀️ Light';
+      }
+
+      function toggleTheme() {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        
+        document.body.classList.remove('dark-mode', 'light-mode');
+        
+        if (isDarkMode) {
+          document.body.classList.add('light-mode');
+          localStorage.setItem('theme', 'light-mode');
+        } else {
+          document.body.classList.add('dark-mode');
+          localStorage.setItem('theme', 'dark-mode');
+        }
+        
+        updateThemeButton();
+      }
+
+      // Event: Theme toggle
+      themeToggle.addEventListener('click', toggleTheme);
+
+      // Initial load
+      initTheme();
+      loadNews();
+
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => {
+        cache.clear();
+      });
+    </script>
+  </body>
+</html>
+
