@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vedantic Gemini Demo (All-in-One)</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    textarea { width: 100%; min-height: 100px; }
+  </style>
+</head>
+<body>
+  <form id="qaForm">
+    <label for="question">Your question</label>
+    <textarea id="question" name="question" rows="4" placeholder="e.g. (marvel/dc) Character vs Character (marvel/dc)" required></textarea>
+    <button type="submit">Get Answer</button>
+  </form>
+
+  <section id="answer" hidden>
+    <h2>Answer</h2>
+    <div id="answerContent"></div>
+    <button id="reset">Ask another question</button>
+  </section>
+
+  <script>
+    const API_KEY = "AIzaSyBO761bkHsVO0m8lQaj1Bojgy1msGHLGZQ";
+    const GEMINI_ENDPOINT =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+    const form = document.getElementById("qaForm");
+    const questionEl = document.getElementById("question");
+    const answerSection = document.getElementById("answer");
+    const answerContent = document.getElementById("answerContent");
+    const resetBtn = document.getElementById("reset");
+
+    const sampleResponses = {
+      karma: {
+        title: "Karma: Action and Consequence",
+        verse: "\u201cKarmanyevadhikaraste ma phaleshu kadachana...\u201d (Bhagavad Gita 2.47)",
+        meaning:
+          "You have the right to perform your duty, but you are not entitled to the fruits of your actions. Focus on your effort, not on the outcome.",
+        practical:
+          "Do your best in your work, in your relationships, and in what you can control, then let go of the rest. This reduces stress and helps you stay steady even when results vary.",
+      },
+      dharma: {
+        title: "Dharma: Living in Alignment",
+        verse:
+          "\u201cSvadharmam nigrahya paradharmat svanusthitat...\u201d (Bhagavad Gita 3.35)",
+        meaning:
+          "It is better to fail in doing your own duty than to succeed in someone else's. Follow the path that fits your nature and circumstances.",
+        practical:
+          "Choose roles and actions that match your values and abilities. When you feel torn, ask: 'What choice helps me act with integrity and service?'.",
+      },
+      meditation: {
+        title: "Meditation: Stillness of Mind",
+        verse:
+          "\u201cYoganusasanam...\u201d (Bhagavad Gita 6.1-2)",
+        meaning:
+          "Yoga means steadying the mind and using it wisely, without being carried away by distractions.",
+        practical:
+          "Start with a few minutes of quiet breathing each day. Notice thoughts without judging them, and gently bring your attention back to the breath.",
+      },
+    };
+
+    function renderAnswer(response) {
+      answerContent.innerHTML = `
+        <p><strong>Relevant Teaching or Verse</strong></p>
+        <p>${response.verse}</p>
+
+        <p><strong>Meaning of the Teaching</strong></p>
+        <p>${response.meaning}</p>
+
+        <p><strong>Practical Guidance</strong></p>
+        <p>${response.practical}</p>
+      `;
+      answerSection.hidden = false;
+    }
+
+    function getSampleResponse(question) {
+      const normalized = question.trim().toLowerCase();
+
+      if (normalized.includes("karma")) return sampleResponses.karma;
+      if (normalized.includes("dharma")) return sampleResponses.dharma;
+      if (normalized.includes("meditation") || normalized.includes("yoga")) return sampleResponses.meditation;
+
+      return null;
+    }
+
+    function parseGeminiAnswer(text) {
+      const headings = {
+        verse: /Relevant Teaching or Verse\s*(.*?)\s*(?=Meaning of the Teaching|Practical Guidance|$)/is,
+        meaning: /Meaning of the Teaching\s*(.*?)\s*(?=Practical Guidance|$)/is,
+        practical: /Practical Guidance\s*(.*)$/is,
+      };
+
+      const verse = (headings.verse.exec(text) || [null, null])[1]?.trim();
+      const meaning = (headings.meaning.exec(text) || [null, null])[1]?.trim();
+      const practical = (headings.practical.exec(text) || [null, null])[1]?.trim();
+
+      if (!verse && !meaning && !practical) {
+        return null;
+      }
+
+      return {
+        verse: verse || "(No verse found)",
+        meaning: meaning || "(No meaning found)",
+        practical: practical || "(No practical guidance found)",
+      };
+    }
+
+    async function queryGemini(question) {
+      const prompt = `You are a comic book expert. Answer the question below using knowledge from Marvel and DC Comics, and follow this output format:\n\nMarvel Character\n* ...\n\nDC Character\n* ...\n\nWho is Stronger and Why\n* ...\n\nQuestion: ${question}, answer in 50 words only    `;
+
+      const response = await fetch(`${GEMINI_ENDPOINT}?key=${API_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini error ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || "(No response received)";
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const question = questionEl.value;
+      if (!question.trim()) return;
+
+      answerContent.innerHTML = "<p><em>Loading...</em></p>";
+      answerSection.hidden = false;
+
+      const sample = getSampleResponse(question);
+      if (sample) {
+        renderAnswer(sample);
+        return;
+      }
+
+      try {
+        const answerText = await queryGemini(question);
+        const parsed = parseGeminiAnswer(answerText);
+
+        if (parsed) {
+          renderAnswer(parsed);
+        } else {
+          answerContent.innerHTML = `<pre class="gemini-output">${answerText}</pre>`;
+          answerSection.hidden = false;
+        }
+      } catch (err) {
+        answerContent.innerHTML = `<p><strong>Error:</strong> ${err.message}</p>`;
+      }
+    });
+
+    resetBtn.addEventListener("click", () => {
+      answerSection.hidden = true;
+      questionEl.value = "";
+      questionEl.focus();
+    });
+  </script>
+</body>
+</html>
