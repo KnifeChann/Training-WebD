@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>News App</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    width: 700px;
+    margin: auto;
+}
+
+h1{
+    text-align:center;
+}
+
+.news-item{
+    margin-top:15px;
+}
+
+a{
+    text-decoration:none;
+    color:blue;
+}
+
+select, button {
+    margin: 10px;
+    padding: 5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>News App</h1>
+
+<select id="topic">
+    <option value="popular">Popular</option>
+    <option value="technology">Technology</option>
+    <option value="sports">Sports</option>
+    <option value="politics">Politics</option>
+    <option value="science">Science</option>
+</select>
+
+<button onclick="fetchNews()">Get News</button>
+
+<div id="news"></div>
+
+<script>
+
+async function getNews(topic = 'popular'){
+
+    const url = `https://hn.algolia.com/api/v1/search?query=${topic}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    console.log("data:", data);
+
+    showNews(data.hits);
+
+}
+
+function showNews(news){
+
+    let container = document.getElementById("news");
+    container.innerHTML = ''; // Clear previous news
+
+    news.forEach(function(item){
+
+        let div = document.createElement("div");
+        div.className = "news-item";
+
+        div.innerHTML = `
+        <p>${item.title || "No title available"}</p>
+        <a href="${item.url}" target="_blank">Read</a>
+        <hr>
+        `;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+function fetchNews() {
+    const topic = document.getElementById('topic').value;
+    getNews(topic);
+}
+
+getNews();
+
+</script>
+
+</body>
+</html>
